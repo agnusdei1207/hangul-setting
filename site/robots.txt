@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://agnusdei1207.github.io/hangul-setting/sitemap.xml

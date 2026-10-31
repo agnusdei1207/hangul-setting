@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hangul-setting · Kali Linux 한글 입력기, apt 한 줄 설치</title>
+<meta name="description" content="Kali Linux에서 ibus·fcitx 없이 apt 한 줄로 한글 입력과 한글 글꼴을 설치합니다. Rust로 만든 두벌식 한글 입력기로 GTK3·GTK4·Qt6·Firefox·Chromium·터미널에서 동작합니다.">
+<meta name="keywords" content="Kali Linux 한글, 칼리 리눅스 한글 입력, 한글 입력기, ibus 없이 한글, 리눅스 한글 설정, 두벌식, apt 한글, hangul-setting">
+<link rel="canonical" href="https://agnusdei1207.github.io/hangul-setting/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="hangul-setting">
+<meta property="og:title" content="hangul-setting · Kali Linux 한글 입력기">
+<meta property="og:description" content="ibus 설치·설정 없이 apt 한 줄로 끝나는 Kali Linux 한글 입력기와 한글 글꼴.">
+<meta property="og:url" content="https://agnusdei1207.github.io/hangul-setting/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="hangul-setting · Kali Linux 한글 입력기">
+<meta name="twitter:description" content="ibus 설치·설정 없이 apt 한 줄로 끝나는 Kali Linux 한글 입력기와 한글 글꼴.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23367bf0'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='white' font-family='sans-serif'%3E%ED%95%9C%3C/text%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "hangul-setting",
+  "description": "Kali Linux용 Rust 한글 입력기. ibus·fcitx 없이 apt 한 줄로 설치한다.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Kali Linux, Debian (X11, amd64)",
+  "inLanguage": "ko",
+  "url": "https://agnusdei1207.github.io/hangul-setting/",
+  "downloadUrl": "https://agnusdei1207.github.io/hangul-setting/install.sh",
+  "codeRepository": "https://github.com/agnusdei1207/hangul-setting",
+  "license": "https://opensource.org/licenses/MIT",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "ibus나 fcitx를 설치해야 하나요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "아니요. hangul-setting은 Rust로 만든 독립 입력기라 ibus·fcitx 패키지나 데몬이 필요 없습니다. 이미 ibus가 깔려 있어도 함께 동작합니다." } },
+    { "@type": "Question", "name": "한글이 네모로 깨져 보여요.",
+      "acceptedAnswer": { "@type": "Answer", "text": "설치할 때 무료 나눔 글꼴(OFL)이 함께 설치되어 한글이 바로 보입니다." } },
+    { "@type": "Question", "name": "한/영 전환 키를 바꿀 수 있나요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "~/.config/hangul-setting/config 파일에 toggle = Ctrl+space 처럼 한 줄을 적고 다시 로그인하면 됩니다." } },
+    { "@type": "Question", "name": "Wayland에서도 되나요?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Kali 기본 데스크톱인 Xfce(X11)를 대상으로 합니다. Wayland 세션의 네이티브 앱은 지원하지 않습니다." } }
+  ]
+}
+</script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1d2330;
+    --muted: #5b6577;
+    --line: #e3e7ee;
+    --card: #f5f7fb;
+    --accent: #367bf0;
+    --code-bg: #0f1520;
+    --code-fg: #e6edf7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #9aa5b5;
+      --line: #263041;
+      --card: #151b26;
+      --accent: #5b9bff;
+      --code-bg: #070a10;
+      --code-fg: #e6edf7;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.7 system-ui, -apple-system, "Segoe UI", "Noto Sans KR", "NanumGothic", "Apple SD Gothic Neo", sans-serif;
+    word-break: keep-all;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 72px; }
+  header h1 { font-size: 2.1rem; line-height: 1.25; margin: 0 0 12px; letter-spacing: -0.02em; }
+  header p { color: var(--muted); margin: 0 0 28px; font-size: 1.08rem; }
+  h2 { font-size: 1.3rem; margin: 48px 0 12px; letter-spacing: -0.01em; }
+  p, li { color: var(--fg); }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+  .install {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--code-bg); color: var(--code-fg);
+    border-radius: 12px; padding: 14px 14px 14px 18px;
+  }
+  .install code { flex: 1; overflow-wrap: anywhere; font-size: 0.95rem; }
+  pre {
+    background: var(--code-bg); color: var(--code-fg);
+    border-radius: 12px; padding: 14px 18px; overflow-x: auto; font-size: 0.92rem; line-height: 1.6;
+  }
+  code { font-family: ui-monospace, "D2Coding", "SFMono-Regular", Consolas, monospace; }
+  p code, li code { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 0.9em; }
+  button {
+    font: inherit; font-size: 0.9rem; cursor: pointer;
+    background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 6px 12px;
+  }
+  .steps { padding-left: 1.2em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; padding: 0; list-style: none; }
+  .grid li { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .grid strong { display: block; margin-bottom: 2px; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 0 6px; font-size: 0.88em; background: var(--card); }
+  details { border-top: 1px solid var(--line); padding: 12px 0; }
+  details:last-of-type { border-bottom: 1px solid var(--line); }
+  summary { cursor: pointer; font-weight: 600; }
+  footer { margin-top: 56px; color: var(--muted); font-size: 0.92rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Kali Linux 한글 입력,<br>apt 한 줄로 끝.</h1>
+    <p>ibus·fcitx 설치도, 설정 파일 편집도 없습니다. Rust로 만든 두벌식 한글 입력기와 무료 한글 글꼴을 한 번에 설치합니다.</p>
+    <div class="install">
+      <code id="cmd">curl -fsSL https://agnusdei1207.github.io/hangul-setting/install.sh | sudo sh</code>
+      <button type="button" id="copy" aria-label="설치 명령 복사">복사</button>
+    </div>
+  </header>
+
+  <h2>설치</h2>
+  <ol class="steps">
+    <li>위 명령을 터미널에 붙여 넣습니다. 저장소 서명 키 등록, <code>apt install</code>, 글꼴 설치까지 자동으로 합니다.</li>
+    <li>로그아웃했다가 다시 로그인합니다.</li>
+    <li><kbd>한/영</kbd>, 오른쪽 <kbd>Alt</kbd>, <kbd>Shift</kbd>+<kbd>Space</kbd> 중 하나로 한글을 켭니다.</li>
+  </ol>
+
+  <h2>되는 곳</h2>
+  <ul class="grid">
+    <li><strong>터미널</strong><span class="muted">qterminal, xfce4-terminal, xterm</span></li>
+    <li><strong>브라우저</strong><span class="muted">Firefox, Chromium</span></li>
+    <li><strong>GTK3 · GTK4 앱</strong><span class="muted">Mousepad, 파일 관리자 등</span></li>
+    <li><strong>Qt6 앱</strong><span class="muted">Wireshark 등</span></li>
+  </ul>
+  <p class="muted">한/영 상태는 모든 앱이 함께 씁니다(GTK4 앱은 앱마다 따로). 대상은 Kali 기본 데스크톱인 Xfce(X11), amd64입니다.</p>
+
+  <h2>한/영 전환 키 바꾸기</h2>
+  <p><code>~/.config/hangul-setting/config</code>에 한 줄을 적고 다시 로그인합니다. 쉼표로 여러 개를 지정할 수 있습니다.</p>
+  <pre><code>toggle = Ctrl+space, Hangul</code></pre>
+  <p class="muted">쓸 수 있는 이름: <code>Hangul</code>, <code>Alt_R</code>, <code>Control_R</code>, <code>Super_R</code>, <code>Caps_Lock</code>, <code>Menu</code>, <code>space</code>, <code>F1</code>~<code>F12</code>, 글자 한 개. 앞에 <code>Shift+</code>, <code>Ctrl+</code>, <code>Alt+</code>, <code>Super+</code>를 붙일 수 있습니다.</p>
+
+  <h2>직접 저장소 등록하기</h2>
+  <p>스크립트를 쓰지 않으려면 아래 세 줄이 같은 일을 합니다. 패키지는 GPG로 서명되어 있습니다.</p>
+  <pre><code>sudo curl -fsSL https://agnusdei1207.github.io/hangul-setting/hangul-setting.gpg -o /usr/share/keyrings/hangul-setting.gpg
+echo "deb [signed-by=/usr/share/keyrings/hangul-setting.gpg] https://agnusdei1207.github.io/hangul-setting ./" | sudo tee /etc/apt/sources.list.d/hangul-setting.list
+sudo apt update &amp;&amp; sudo apt install hangul-setting</code></pre>
+  <p class="muted">업데이트는 평소처럼 <code>sudo apt upgrade</code>로 받습니다.</p>
+
+  <h2>삭제</h2>
+  <pre><code>sudo apt purge hangul-setting
+sudo rm /etc/apt/sources.list.d/hangul-setting.list /usr/share/keyrings/hangul-setting.gpg</code></pre>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>ibus나 fcitx를 설치해야 하나요?</summary>
+    <p>아니요. hangul-setting은 Rust로 만든 독립 입력기라 ibus·fcitx 패키지나 데몬이 필요 없습니다. 이미 ibus가 깔려 있어도 함께 동작합니다.</p>
+  </details>
+  <details>
+    <summary>한글이 네모로 깨져 보여요.</summary>
+    <p>설치할 때 무료 나눔 글꼴(<a href="https://hangeul.naver.com/font">OFL</a>)이 함께 설치되어 한글이 바로 보입니다. 터미널용 D2Coding 글꼴도 들어 있습니다.</p>
+  </details>
+  <details>
+    <summary>입력이 안 돼요.</summary>
+    <p>설치 후 다시 로그인했는지 확인하세요. 로그인 없이 바로 쓰려면 터미널에서 <code>hangul-setting &amp;</code>를 실행한 뒤 앱을 새로 엽니다.</p>
+  </details>
+  <details>
+    <summary>Wayland에서도 되나요?</summary>
+    <p>Kali 기본 데스크톱인 Xfce(X11)를 대상으로 합니다. Wayland 세션의 네이티브 앱은 지원하지 않습니다.</p>
+  </details>
+
+  <footer>
+    <p><a href="https://github.com/agnusdei1207/hangul-setting">GitHub 소스</a> · MIT 라이선스 · 글꼴: 나눔 글꼴(SIL OFL 1.1)</p>
+  </footer>
+</main>
+<script>
+  document.getElementById("copy").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    try {
+      await navigator.clipboard.writeText(document.getElementById("cmd").textContent);
+      button.textContent = "복사됨";
+    } catch {
+      button.textContent = "직접 선택하세요";
+    }
+    setTimeout(() => { button.textContent = "복사"; }, 1600);
+  });
+</script>
+</body>
+</html>

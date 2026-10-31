@@ -1,0 +1,21 @@
+name: site
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', 'packaging/apt/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: 사이트 게시 (gh-pages, APT 저장소는 그대로)
+        run: sh packaging/apt/publish.sh
