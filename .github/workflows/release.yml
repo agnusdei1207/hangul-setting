@@ -22,7 +22,8 @@ jobs:
       - name: e2e (설치한 .deb로 Kali, Xvfb, xterm, GTK3)
         run: |
           docker build -t hangul-e2e tests/e2e
-          docker run --rm -v "$PWD:/src" hangul-e2e sh /src/tests/e2e/run.sh /src/target/debian/hangul-setting_*.deb
+          deb=$(ls target/debian/hangul-setting_*.deb)
+          docker run --rm -v "$PWD:/src" hangul-e2e sh /src/tests/e2e/run.sh "/src/$deb"
       - name: APT 저장소 게시 (gh-pages)
         env:
           APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
