@@ -1,6 +1,6 @@
 [package]
 name = "hangul-setting"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Kali Linux용 Rust 한글 입력기 (XIM, 두벌식)"
 license = "MIT"
@@ -8,10 +8,12 @@ repository = "https://github.com/agnusdei1207/hangul-setting"
 
 [dependencies]
 env_logger = { version = "0.11.11", default-features = false }
+futures-util = { version = "0.3.34", default-features = false }
 log = "0.4.35"
 x11rb = "0.14.0"
 xim = { version = "0.6.0", default-features = false, features = ["std", "x11rb-server"] }
 xim-ctext = "0.5.0"
+zbus = "6.2.0"
 
 [package.metadata.deb]
 maintainer = "agnusdei1207 <agnusdei1207@gmail.com>"

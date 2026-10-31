@@ -1,6 +1,7 @@
 //! XIM 요청을 엔진에 잇는다. 입력 컨텍스트마다 조합기를 하나 둔다.
 
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 use hangul_setting::engine::{Engine, Key};
 use hangul_setting::hangul::Composer;
@@ -12,10 +13,6 @@ use xim::{
 };
 
 pub const KEY_PRESS_MASK: u32 = 1;
-const SHIFT_MASK: u16 = 1 << 0;
-const CONTROL_MASK: u16 = 1 << 2;
-const ALT_MASK: u16 = 1 << 3;
-const SUPER_MASK: u16 = 1 << 6;
 
 /// 앱 하나의 입력 컨텍스트. XIM 연결마다 통신 창이 따로 있고 id는 연결 안에서만 유일하다.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -32,7 +29,8 @@ struct HeldKey {
 }
 
 pub struct Handler {
-    engine: Engine,
+    /// 한/영 모드는 IBus 프론트엔드와 함께 쓴다.
+    engine: Arc<Mutex<Engine>>,
     keymap: Keymap,
     /// 지금 처리 중인 XIM 메시지가 도착한 통신 창. 메인 루프가 `filter_event` 전에 정한다.
     pub com_win: u32,
@@ -45,9 +43,9 @@ pub struct Handler {
 }
 
 impl Handler {
-    pub fn new(keymap: Keymap) -> Self {
+    pub fn new(engine: Arc<Mutex<Engine>>, keymap: Keymap) -> Self {
         Handler {
-            engine: Engine::default(),
+            engine,
             keymap,
             com_win: 0,
             held: HashMap::new(),
@@ -218,14 +216,13 @@ impl<S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handle
         let address = self.address(&user_ic.ic);
         self.release(server, address)?;
 
-        let state = u16::from(xev.state);
-        let key = Key {
-            keysym: self.keymap.base_keysym(xev.detail),
-            shift: state & SHIFT_MASK != 0,
-            command: state & (CONTROL_MASK | ALT_MASK | SUPER_MASK) != 0,
-        };
+        let key = Key::from_x_state(self.keymap.base_keysym(xev.detail), u32::from(u16::from(xev.state)));
         let before = user_ic.user_data.preedit();
-        let outcome = self.engine.handle_key(&mut user_ic.user_data, key);
+        let outcome = self
+            .engine
+            .lock()
+            .expect("engine lock")
+            .handle_key(&mut user_ic.user_data, key);
         let after = user_ic.user_data.preedit();
 
         if !outcome.consumed && !outcome.commit.is_empty() {

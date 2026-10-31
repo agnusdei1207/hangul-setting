@@ -13,4 +13,6 @@
 | 키 결과 | `KeyOutcome` | 엔진이 키 하나에 낸 결과 |
 | 키심 | `keysym` | X11이 키에 붙인 기호 번호. 키코드를 자판 매핑으로 바꾼 값 |
 | XIM | `xim` | X Input Method. 앱(클라이언트)과 입력기(서버)가 X 서버를 통해 주고받는 프로토콜 |
-| 입력 컨텍스트 | `InputContext` | XIM에서 앱 입력 창 하나에 대응하는 세션. 조합 상태는 컨텍스트마다 따로 둔다 |
+| 프론트엔드 | `xim_handler`, `ibus` | 앱과 입력기 사이의 프로토콜 하나를 맡는 부분. 둘 다 같은 엔진을 쓴다 |
+| IBus 포털 | `ibus` | 세션 D-Bus의 `org.freedesktop.portal.IBus`. Qt 내장 ibus 플러그인이 `IBUS_USE_PORTAL=1`일 때 붙는 곳 |
+| 입력 컨텍스트 | `InputContext` | 앱 입력 창 하나에 대응하는 세션(XIM의 IC, IBus의 InputContext 객체). 조합 상태는 컨텍스트마다 따로 둔다 |

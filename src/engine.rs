@@ -22,6 +22,24 @@ pub struct Key {
     pub command: bool,
 }
 
+impl Key {
+    /// X11 수식 키 상태(KeyPress의 `state`, IBus의 `state`)로 만든다.
+    /// IBus는 같은 비트에 가상 수식 키 Super(26)·Meta(28)를 더 쓴다.
+    pub fn from_x_state(keysym: u32, state: u32) -> Self {
+        const SHIFT: u32 = 1 << 0;
+        const CONTROL: u32 = 1 << 2;
+        const ALT: u32 = 1 << 3;
+        const SUPER: u32 = 1 << 6;
+        const IBUS_SUPER: u32 = 1 << 26;
+        const IBUS_META: u32 = 1 << 28;
+        Key {
+            keysym,
+            shift: state & SHIFT != 0,
+            command: state & (CONTROL | ALT | SUPER | IBUS_SUPER | IBUS_META) != 0,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Mode {
     Hangul,
@@ -234,6 +252,24 @@ mod tests {
             type_keys(&mut engine, &mut Composer::default(), &keys),
             "<72><6b><ff08>"
         );
+    }
+
+    #[test]
+    fn x_state_decodes_shift_and_command_modifiers() {
+        assert_eq!(
+            Key::from_x_state(0x61, 0),
+            Key {
+                keysym: 0x61,
+                shift: false,
+                command: false
+            }
+        );
+        assert!(Key::from_x_state(0x41, 1).shift);
+        // CapsLock(2)·NumLock(16)은 단축키가 아니다
+        assert!(!Key::from_x_state(0x61, 2 | 16).command);
+        for state in [1 << 2, 1 << 3, 1 << 6, 1 << 26, 1 << 28] {
+            assert!(Key::from_x_state(0x61, state).command, "state {state:#x}");
+        }
     }
 
     #[test]

@@ -1,7 +1,11 @@
 //! XIM 서버. X 세션에 `@im=hangul` 입력기로 붙어 앱의 키 입력을 엔진에 넘긴다.
 
+mod ibus;
 mod xim_handler;
 
+use std::sync::{Arc, Mutex};
+
+use hangul_setting::engine::Engine;
 use hangul_setting::keymap::Keymap;
 use x11rb::connection::Connection;
 use x11rb::protocol::Event;
@@ -35,7 +39,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (conn, screen_num) = x11rb::rust_connection::RustConnection::connect(None)?;
     let mut server = X11rbServer::init(&conn, screen_num, IM_NAME, xim::ALL_LOCALES)?;
     let mut connections = XimConnections::new();
-    let mut handler = Handler::new(load_keymap(&conn)?);
+    let engine = Arc::new(Mutex::new(Engine::default()));
+    let ibus_engine = engine.clone();
+    // Qt 앱용. 세션 버스가 없어도 XIM 입력은 계속돼야 한다.
+    std::thread::spawn(move || {
+        if let Err(e) = zbus::block_on(ibus::serve(ibus_engine)) {
+            log::warn!("IBus 포털 꺼짐(Qt 앱 입력 불가): {e}");
+        }
+    });
+    let mut handler = Handler::new(engine, load_keymap(&conn)?);
     log::info!("XIM 서버 시작: XMODIFIERS=@im={IM_NAME}");
 
     loop {

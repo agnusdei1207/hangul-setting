@@ -1,6 +1,6 @@
 # hangul-setting
 
-Kali Linux(Xfce, X11)용 한글 입력기. ibus·fcitx 없이 Rust 바이너리 하나가 XIM 입력기로 동작한다. 두벌식 표준 자판.
+Kali Linux(Xfce, X11)용 한글 입력기. ibus·fcitx 없이 Rust 바이너리 하나가 동작한다. 두벌식 표준 자판.
 
 ## 설치
 
@@ -18,13 +18,13 @@ echo "deb [signed-by=/usr/share/keyrings/hangul-setting.gpg] https://agnusdei120
 sudo apt update && sudo apt install hangul-setting
 ```
 
-설치되는 것: `/usr/bin/hangul-setting`, 세션 환경 변수 `/etc/X11/Xsession.d/90hangul-setting`(`XMODIFIERS=@im=hangul`, `GTK_IM_MODULE=xim`), 자동 시작 `/etc/xdg/autostart/hangul-setting.desktop`.
+설치되는 것: `/usr/bin/hangul-setting`, 세션 환경 변수 `/etc/X11/Xsession.d/90hangul-setting`(`XMODIFIERS=@im=hangul`, `GTK_IM_MODULE=xim`, `QT_IM_MODULE=ibus`, `IBUS_USE_PORTAL=1`), 자동 시작 `/etc/xdg/autostart/hangul-setting.desktop`.
 
 ## 사용
 
 - 한/영 전환: `한/영`(Hangul) 키, 오른쪽 `Alt`, `Shift+Space`
-- 지원: GTK3 앱, Firefox, Chromium, xterm 등 XIM을 쓰는 X11 앱
-- 아직 안 됨: Qt 앱(qterminal, Wireshark 등). Kali의 Qt6에는 XIM 플러그인이 없다. 진행 중: [INTENT-0002](docs/intents/0002-qt-input.md)
+- 지원: GTK3 앱, Firefox, Chromium, xterm(XIM), qterminal·Wireshark 등 Qt6 앱(Qt에 내장된 ibus 플러그인이 붙는 IBus 포털 인터페이스를 직접 제공한다. ibus 패키지는 필요 없다)
+- 한/영 상태는 모든 앱이 함께 쓴다
 - 미지원: Wayland 네이티브 입력, GTK4 앱
 
 ## 개발

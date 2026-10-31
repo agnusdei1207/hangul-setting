@@ -18,4 +18,4 @@ case "$target" in
     *) install -m 755 "$target" /usr/local/bin/hangul-setting ;;
 esac
 hangul-setting --version
-exec sh "$here/xim-input.sh"
+exec dbus-run-session -- sh "$here/input.sh"
