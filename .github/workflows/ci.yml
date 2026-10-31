@@ -14,7 +14,7 @@ jobs:
       - run: cargo clippy --all-targets --locked -- -D warnings
       - run: cargo test --locked
       - run: cargo build --release --locked
-      - name: e2e (Kali, Xvfb, xterm, GTK3)
+      - name: e2e (Kali, Xvfb, xterm, GTK3, Qt6)
         run: |
           docker build -t hangul-e2e tests/e2e
           docker run --rm -v "$PWD:/src" hangul-e2e sh /src/tests/e2e/run.sh /src/target/release/hangul-setting

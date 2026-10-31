@@ -19,7 +19,7 @@ jobs:
       - run: cargo test --locked
       - run: cargo install --locked cargo-deb@3.8.0
       - run: cargo deb --locked
-      - name: e2e (설치한 .deb로 Kali, Xvfb, xterm, GTK3)
+      - name: e2e (설치한 .deb로 Kali, Xvfb, xterm, GTK3, Qt6)
         run: |
           docker build -t hangul-e2e tests/e2e
           deb=$(ls target/debian/hangul-setting_*.deb)
