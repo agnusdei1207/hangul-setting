@@ -1,6 +1,6 @@
 # INTENT-0001 · Kali에서 apt 한 줄로 한글 입력·표시
 
-- 상태: 진행 중
+- 상태: 완료
 - 작성 / 갱신: 2026-10-31 / 2026-10-31
 
 ## 왜
@@ -18,7 +18,7 @@ Kali(Xfce, X11)에서 APT 저장소를 등록하고 `sudo apt install hangul-set
 - [x] `Hangul`·오른쪽 `Alt`·`Shift+Space`로 한/영이 전환되고, 영문 모드에서는 모든 키가 그대로 앱에 간다.
 - [x] 실제 X 서버 위의 XIM 클라이언트(xterm, GTK3 앱)에 xdotool로 `gksdlf`을 치면 `한일`이 입력된다.
 - [x] `.deb`를 Kali rolling 컨테이너에 설치하면 바이너리, 세션 환경 변수, 자동 시작 항목, 한글 폰트가 깔린다.
-- [ ] 공개 URL의 APT 저장소에서 `apt install hangul-setting`이 서명 검증을 통과해 설치된다.
+- [x] 공개 URL의 APT 저장소에서 `apt install hangul-setting`이 서명 검증을 통과해 설치된다.
 
 ## 제약
 
@@ -46,8 +46,8 @@ Kali(Xfce, X11)에서 APT 저장소를 등록하고 `sudo apt install hangul-set
 | 한/영 전환 | `engine::tests::toggle_keys_switch_mode_and_commit`(세 키 모두); E2E는 `Shift+Space`만 실측 | 통과 |
 | 실제 XIM 클라이언트 입력 | `tests/e2e/run.sh`, Kali rolling + Xvfb: `통과 xterm: 한일 abc`, `통과 gtk3: 안녕 간` | 통과 |
 | deb 설치 내용 | `run.sh <.deb>`: Kali 컨테이너에 apt로 설치, 패키지의 `90hangul-setting`을 source하고 자동 시작 `Exec`으로 입력기 실행 → `통과 폰트: Noto Serif CJK JP`, `통과 xterm: 한일 abc`, `통과 gtk3: 안녕 간` | 통과 |
-| 공개 APT 저장소 설치 | 로컬 검증: `publish.sh`로 만든 사이트를 HTTP로 띄워 `signed-by` 키로 `apt-get update`(경고 없음)·`apt install` 성공. 공개 URL은 미검증 | 미검증 |
+| 공개 APT 저장소 설치 | `v0.1.0` 릴리스 워크플로 통과(deb 설치 E2E 포함). 깨끗한 Kali 컨테이너에서 `curl -fsSL https://agnusdei1207.github.io/hangul-setting/install.sh \| sh` → `InRelease` 서명 검증, `fonts-noto-cjk hangul-setting` 설치, 이어서 xterm·GTK3 E2E 통과 | 통과 |
 
-남은 것: `v0.1.0` 태그로 공개 저장소 게시 후 공개 URL에서 설치 실측.
+남은 것: 없음. Qt 앱은 INTENT-0002.
 
 남는 위험: xterm이 XIM 오류(`BadSomething`)를 두 번 보낸다. 입력에는 영향이 없다. Qt 앱(Kali 기본 터미널 qterminal 포함)의 XIM 지원은 아직 확인하지 않았다.
