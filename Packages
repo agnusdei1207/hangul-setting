@@ -18,3 +18,23 @@ Description: Kali Linux용 Rust 한글 입력기 (XIM, 두벌식)
  후 재로그인하면 X11 세션의 GTK3 앱, Firefox, Chromium, xterm에서
  한글을 입력할 수 있다. 한글 폰트를 함께 설치한다.
 
+Package: hangul-setting
+Architecture: amd64
+Version: 0.2.0-1
+Priority: optional
+Section: utils
+Maintainer: agnusdei1207 <agnusdei1207@gmail.com>
+Installed-Size: 3112
+Depends: fonts-noto-cjk | fonts-nanum, libc6 (>= 2.34)
+Filename: pool/hangul-setting_0.2.0-1_amd64.deb
+Size: 941528
+MD5sum: 31a8415b3d3851d5ad44307ab9759a71
+SHA1: 61599eda072086a14df1004ac004397ffb40d8e9
+SHA256: f3f7fc26dfcdda45cd56a0a60287f808bee46cb7ec1da278b2893b694a565b4b
+SHA512: 0e31bbcfbc4a25d6860fd8d488b9c363421822856ca5281899ec62c63828c4196877110d903dddc34621a3414b60fd5a5c210befae205ff066d931a002de5d17
+Homepage: https://github.com/agnusdei1207/hangul-setting
+Description: Kali Linux용 Rust 한글 입력기 (XIM, 두벌식)
+ ibus·fcitx 없이 동작하는 Rust 한글 입력기(XIM, 두벌식). 설치
+ 후 재로그인하면 X11 세션의 GTK3 앱, Firefox, Chromium, xterm에서
+ 한글을 입력할 수 있다. 한글 폰트를 함께 설치한다.
+
