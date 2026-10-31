@@ -1,0 +1,20 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup toolchain install
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo test --locked
+      - run: cargo build --release --locked
+      - name: e2e (Kali, Xvfb, xterm, GTK3)
+        run: |
+          docker build -t hangul-e2e tests/e2e
+          docker run --rm -v "$PWD:/src" hangul-e2e sh /src/tests/e2e/run.sh /src/target/release/hangul-setting
