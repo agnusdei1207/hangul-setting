@@ -1,0 +1,4 @@
+# hangul-setting: X 세션 앱이 한글 입력기(XIM @im=hangul)를 쓰게 한다.
+# im-config(70)보다 뒤, dbus 활성화 환경 반영(95)보다 앞에 실행된다.
+export XMODIFIERS=@im=hangul
+export GTK_IM_MODULE=xim

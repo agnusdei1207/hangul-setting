@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=hangul-setting
+Comment=한글 입력기 (두벌식, XIM)
+Exec=hangul-setting
+NoDisplay=true
+X-GNOME-Autostart-Phase=Initialization

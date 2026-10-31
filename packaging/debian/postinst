@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+if [ "$1" = configure ]; then
+    echo "hangul-setting: 로그아웃 후 다시 로그인하면 한글 입력이 켜집니다. 한/영 전환: 한/영 키, 오른쪽 Alt, Shift+Space"
+fi
+#DEBHELPER#

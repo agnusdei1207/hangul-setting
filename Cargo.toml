@@ -2,6 +2,9 @@
 name = "hangul-setting"
 version = "0.1.0"
 edition = "2024"
+description = "Kali Linux용 Rust 한글 입력기 (XIM, 두벌식)"
+license = "MIT"
+repository = "https://github.com/agnusdei1207/hangul-setting"
 
 [dependencies]
 env_logger = { version = "0.11.11", default-features = false }
@@ -9,3 +12,17 @@ log = "0.4.35"
 x11rb = "0.14.0"
 xim = { version = "0.6.0", default-features = false, features = ["std", "x11rb-server"] }
 xim-ctext = "0.5.0"
+
+[package.metadata.deb]
+maintainer = "agnusdei1207 <agnusdei1207@gmail.com>"
+section = "utils"
+priority = "optional"
+depends = "$auto, fonts-noto-cjk | fonts-nanum"
+extended-description = "ibus·fcitx 없이 동작하는 Rust 한글 입력기(XIM, 두벌식). 설치 후 재로그인하면 X11 세션의 GTK3 앱, Firefox, Chromium, xterm에서 한글을 입력할 수 있다. 한글 폰트를 함께 설치한다."
+maintainer-scripts = "packaging/debian/"
+assets = [
+    ["target/release/hangul-setting", "usr/bin/", "755"],
+    ["packaging/90hangul-setting", "etc/X11/Xsession.d/", "644"],
+    ["packaging/hangul-setting.desktop", "etc/xdg/autostart/", "644"],
+    ["README.md", "usr/share/doc/hangul-setting/README", "644"],
+]

@@ -1,11 +1,14 @@
 #!/bin/sh
 # 실제 X 서버(Xvfb) 위의 XIM 앱(xterm, GTK3)에 xdotool로 두벌식을 쳐서 한글이 입력되는지 확인한다.
 # 필요: Xvfb xterm xdotool x11-utils python3-gi gir1.2-gtk-3.0, en_US.UTF-8 로캘, PATH의 hangul-setting
+# 입력기 환경 변수(XMODIFIERS, GTK_IM_MODULE)가 이미 있으면 그대로 쓴다(패키지의 세션 스크립트 검증).
+# HANGUL_SERVER_CMD가 있으면 그 명령으로 입력기를 띄운다(자동 시작 항목 검증).
 set -eu
 
 here=$(dirname "$0")
 out=$(mktemp -d)
-export DISPLAY=:99 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 XMODIFIERS=@im=hangul GTK_IM_MODULE=xim
+export DISPLAY=:99 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+export XMODIFIERS="${XMODIFIERS:-@im=hangul}" GTK_IM_MODULE="${GTK_IM_MODULE:-xim}"
 
 wait_for() { # 설명 명령...
     what=$1; shift
@@ -21,7 +24,7 @@ Xvfb :99 -screen 0 1024x768x24 -nolisten tcp >/dev/null 2>&1 &
 xvfb=$!
 trap 'kill $xvfb 2>/dev/null' EXIT
 wait_for "X 서버" xdpyinfo
-hangul-setting &
+${HANGUL_SERVER_CMD:-hangul-setting} &
 wait_for "XIM 서버 등록" sh -c 'xprop -root XIM_SERVERS | grep -q hangul'
 
 # 창이 뜨면 포커스를 주고 키를 친 뒤 결과 파일을 기다려 기대값과 비교한다.
