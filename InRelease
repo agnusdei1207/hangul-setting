@@ -1,0 +1,28 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Architectures: amd64
+Codename: stable
+Date: Sat, 31 Oct 2026 03:50:57 +0000
+Label: hangul-setting
+Origin: hangul-setting
+Suite: stable
+MD5Sum:
+ 3d469b47d022db76dc08a03e7e8dab52              932 Packages
+ 25995d206d8fb93cb7205bff00e15cac              702 Packages.gz
+SHA1:
+ adcd440c7cf6e4b60b2a3b114743402c2c91998d              932 Packages
+ bc67b9f3e95f4007826af6914e1aead98fa030c9              702 Packages.gz
+SHA256:
+ 3582d4ae830823e9b71b4caf4b916c538dcf9be76d11a17eb44cbbfaf1313974              932 Packages
+ 8d0988b9985d1d3334fd944e50435f35142e4f6ac86d1d831e7c50bd99cdd694              702 Packages.gz
+SHA512:
+ e56b41e4e7b2233dc271090cb8ae6239284a731a2258302a5fe37095fa502b4a30dc2c42ff9d77dc18696458a1262ce4fef7e407b56e29b10fbb98bbf243e1a9              932 Packages
+ 66c84cb4fde4a69f0f2e6ae92919e29387014669180c3b604f6f26c350f8f1288e2d867ba0dd2dd64c1704927852c68b75f7613d7b5583655f210c351a569108              702 Packages.gz
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQTyAWRTnhlrOa+uGIeXSwO66i0+TAUCauVloQAKCRCXSwO66i0+
+TMNtAQCrSH31ykUMj/PXwNoQhjyd7xztX5yGWoKn5FtwD7awQQEApkbEUNXmYZiI
+GQrxR034zNFsAUNL3F/E3DDNIm4NxAY=
+=Ehla
+-----END PGP SIGNATURE-----
