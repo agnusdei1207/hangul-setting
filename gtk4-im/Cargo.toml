@@ -1,0 +1,14 @@
+[package]
+name = "hangul-gtk4-im"
+version = "0.3.0"
+edition = "2024"
+description = "hangul-setting GTK4 입력 모듈"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+gtk4 = "0.11.5"
+hangul-setting = { path = ".." }

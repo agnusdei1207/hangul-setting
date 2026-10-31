@@ -6,6 +6,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-24.04
@@ -15,16 +19,19 @@ jobs:
         run: |
           version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n1)
           [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "태그 $GITHUB_REF_NAME 와 Cargo.toml $version 가 다르다"; exit 1; }
+      - name: GTK4 개발 라이브러리(입력 모듈 빌드), 나눔 글꼴(조합 창 테스트)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends libgtk-4-dev fonts-nanum
       - run: rustup toolchain install
-      - run: cargo test --locked
+      - run: cargo test --workspace --locked
+      - run: cargo build --workspace --release --locked
       - run: cargo install --locked cargo-deb@3.8.0
-      - run: cargo deb --locked
-      - name: e2e (설치한 .deb로 Kali, Xvfb, xterm, GTK3, Qt6)
+      - run: cargo deb --no-build --locked
+      - name: e2e (설치한 .deb로 Kali, Xvfb, xterm 조합 창, GTK3, Qt6, GTK4)
         run: |
           docker build -t hangul-e2e tests/e2e
           deb=$(ls target/debian/hangul-setting_*.deb)
           docker run --rm -v "$PWD:/src" hangul-e2e sh /src/tests/e2e/run.sh "/src/$deb"
-      - name: APT 저장소 게시 (gh-pages)
+      - name: APT 저장소와 사이트 게시 (gh-pages)
         env:
           APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
         run: sh packaging/apt/publish.sh target/debian/hangul-setting_*.deb

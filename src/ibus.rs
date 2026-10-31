@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex};
 use futures_util::StreamExt;
 use hangul_setting::engine::{Engine, Key};
 use hangul_setting::hangul::Composer;
+use zbus::fdo::{RequestNameFlags, RequestNameReply};
 use zbus::message::Header;
 use zbus::object_server::{ObjectServer, SignalEmitter};
 use zbus::{Connection, OwnedObjectPath, Structure, Variant, connection, fdo, interface};
@@ -204,7 +205,10 @@ async fn reap_vanished_clients(conn: &Connection, owners: Owners) -> zbus::Resul
     Ok(())
 }
 
-/// 세션 버스에 포털 이름을 등록하고 요청을 처리한다. 세션 버스가 없거나 이름을 이미 누가 쓰면 실패한다.
+/// 세션 버스에 포털 이름을 등록하고 요청을 처리한다. 세션 버스가 없으면 실패한다.
+///
+/// ibus가 깔려 있으면 ibus-portal이 같은 이름을 먼저 가질 수 있다. 교체를 시도하고, 안 되면 줄을 서서
+/// 그쪽이 끝나는 즉시 이어받는다. 우리 쪽은 교체를 허락하지 않는다.
 pub async fn serve(engine: Arc<Mutex<Engine>>) -> zbus::Result<()> {
     let owners = Owners::default();
     let portal = Portal {
@@ -214,9 +218,16 @@ pub async fn serve(engine: Arc<Mutex<Engine>>) -> zbus::Result<()> {
     };
     let conn = connection::Builder::session()
         .serve_at(IBUS_PATH, portal)
-        .name(PORTAL_NAME)
         .build()
         .await?;
-    log::info!("IBus 포털 시작: {PORTAL_NAME} (Qt: QT_IM_MODULE=ibus IBUS_USE_PORTAL=1)");
+    match conn
+        .request_name_with_flags(PORTAL_NAME, RequestNameFlags::REPLACE_EXISTING)
+        .await?
+    {
+        RequestNameReply::InQueue => {
+            log::warn!("{PORTAL_NAME}을 다른 프로그램(ibus-portal 등)이 쓰는 중. 끝나면 이어받는다")
+        }
+        _ => log::info!("IBus 포털 시작: {PORTAL_NAME} (Qt: QT_IM_MODULE=ibus IBUS_USE_PORTAL=1)"),
+    }
     reap_vanished_clients(&conn, owners).await
 }

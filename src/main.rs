@@ -1,10 +1,12 @@
 //! XIM 서버. X 세션에 `@im=hangul` 입력기로 붙어 앱의 키 입력을 엔진에 넘긴다.
 
 mod ibus;
+mod preedit_window;
 mod xim_handler;
 
 use std::sync::{Arc, Mutex};
 
+use hangul_setting::config;
 use hangul_setting::engine::Engine;
 use hangul_setting::keymap::Keymap;
 use x11rb::connection::Connection;
@@ -13,6 +15,7 @@ use x11rb::protocol::xproto::ConnectionExt;
 use xim::x11rb::X11rbServer;
 use xim::{Request, XimConnections};
 
+use crate::preedit_window::PreeditWindow;
 use crate::xim_handler::Handler;
 
 /// `XMODIFIERS=@im=hangul`의 이름.
@@ -39,7 +42,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (conn, screen_num) = x11rb::rust_connection::RustConnection::connect(None)?;
     let mut server = X11rbServer::init(&conn, screen_num, IM_NAME, xim::ALL_LOCALES)?;
     let mut connections = XimConnections::new();
-    let engine = Arc::new(Mutex::new(Engine::default()));
+    let config = config::load().unwrap_or_else(|e| {
+        log::error!("설정 오류, 기본 한/영 키를 씁니다: {e}");
+        config::Config::default()
+    });
+    let engine = Arc::new(Mutex::new(Engine::new(config.toggle_keys)));
     let ibus_engine = engine.clone();
     // Qt 앱용. 세션 버스가 없어도 XIM 입력은 계속돼야 한다.
     std::thread::spawn(move || {
@@ -47,13 +54,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             log::warn!("IBus 포털 꺼짐(Qt 앱 입력 불가): {e}");
         }
     });
-    let mut handler = Handler::new(engine, load_keymap(&conn)?);
+    let preedit_window = PreeditWindow::new(&conn, screen_num)?;
+    let mut handler = Handler::new(engine, load_keymap(&conn)?, preedit_window);
     log::info!("XIM 서버 시작: XMODIFIERS=@im={IM_NAME}");
 
     loop {
         let event = conn.wait_for_event()?;
         match &event {
             Event::MappingNotify(_) => handler.set_keymap(load_keymap(&conn)?),
+            Event::Expose(e) => handler.handle_expose(e.window),
             Event::ClientMessage(msg) => {
                 handler.com_win = msg.window;
                 // xim 크레이트는 SyncReply를 버리므로 짧은 메시지에서 직접 읽는다.

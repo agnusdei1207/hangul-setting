@@ -1,6 +1,8 @@
-# hangul-setting: X 세션 앱이 한글 입력기를 쓰게 한다. GTK3·xterm 등은 XIM, Qt는 IBus 포털.
+# hangul-setting: X 세션 앱이 한글 입력기를 쓰게 한다.
+# GTK4는 우리 GTK4 모듈, GTK3·xterm 등은 XIM, Qt는 Qt 내장 ibus 플러그인이 붙는 우리 D-Bus 서비스.
+# GTK_IM_MODULE은 앞에서부터 있는 모듈을 쓴다(GTK3에는 hangul-setting 모듈이 없어 xim을 쓴다).
 # im-config(70)보다 뒤, dbus 활성화 환경 반영(95)보다 앞에 실행된다.
 export XMODIFIERS=@im=hangul
-export GTK_IM_MODULE=xim
+export GTK_IM_MODULE=hangul-setting:xim
 export QT_IM_MODULE=ibus
 export IBUS_USE_PORTAL=1

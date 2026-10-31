@@ -6,6 +6,9 @@ use std::sync::{Arc, Mutex};
 use hangul_setting::engine::{Engine, Key};
 use hangul_setting::hangul::Composer;
 use hangul_setting::keymap::Keymap;
+
+use crate::preedit_window::PreeditWindow;
+use x11rb::connection::Connection;
 use x11rb::protocol::xproto::KeyPressEvent;
 use xim::{
     CommitData, ForwardEventFlag, InputContext, InputStyle, Request, Server, ServerCore, ServerError, ServerHandler,
@@ -28,7 +31,7 @@ struct HeldKey {
     request: Request,
 }
 
-pub struct Handler {
+pub struct Handler<'c, C: Connection> {
     /// 한/영 모드는 IBus 프론트엔드와 함께 쓴다.
     engine: Arc<Mutex<Engine>>,
     keymap: Keymap,
@@ -40,16 +43,65 @@ pub struct Handler {
     /// 한꺼번에 쌓이면 GTK3에서 둘 중 하나가 표시를 잃고 순서가 뒤집혀 스페이스·엔터가 조합 중이던
     /// 글자보다 먼저 들어간다. 확정을 동기로 보내면 앱은 가짜 키를 처리한 뒤에 SyncReply를 보낸다.
     held: HashMap<IcAddress, HeldKey>,
+    /// 조합 중 글자를 스스로 그리지 않는 앱(over-the-spot, root)을 위한 창. 폰트가 없으면 `None`.
+    preedit_window: Option<PreeditWindow<'c, C>>,
 }
 
-impl Handler {
-    pub fn new(engine: Arc<Mutex<Engine>>, keymap: Keymap) -> Self {
+impl<'c, C: Connection> Handler<'c, C> {
+    pub fn new(engine: Arc<Mutex<Engine>>, keymap: Keymap, preedit_window: Option<PreeditWindow<'c, C>>) -> Self {
         Handler {
             engine,
             keymap,
             com_win: 0,
             held: HashMap::new(),
+            preedit_window,
         }
+    }
+
+    /// 조합 창이 다시 보이게 됐을 때.
+    pub fn handle_expose(&self, window: u32) {
+        if let Some(preedit) = self.preedit_window.as_ref().filter(|p| p.window() == window)
+            && let Err(e) = preedit.redraw()
+        {
+            log::warn!("조합 창 다시 그리기 실패: {e}");
+        }
+    }
+
+    /// 앱이 콜백을 받으면 앱이 그리고, 아니면 커서 자리의 조합 창에 그린다.
+    fn draw_preedit<S: Server>(
+        &mut self,
+        server: &mut S,
+        ic: &mut InputContext,
+        text: &str,
+    ) -> Result<(), ServerError> {
+        if ic.input_style().contains(InputStyle::PREEDIT_CALLBACKS) {
+            return server.preedit_draw(ic, text);
+        }
+        let Some(window) = &mut self.preedit_window else {
+            return Ok(());
+        };
+        let Some(app_win) = ic.app_focus_win().or(ic.app_win()) else {
+            return Ok(());
+        };
+        let spot = ic.preedit_spot();
+        window
+            .show(text, app_win.get(), spot.x, spot.y)
+            .map_err(|e| ServerError::Internal(e.to_string()))
+    }
+
+    /// 조합 중 글자를 비우고 `commit`을 확정한 뒤 새 조합 중 글자를 그린다.
+    fn show<S: Server>(
+        &mut self,
+        server: &mut S,
+        ic: &mut InputContext,
+        commit: &str,
+        preedit: &str,
+    ) -> Result<(), ServerError> {
+        if !commit.is_empty() {
+            self.draw_preedit(server, ic, "")?;
+            server.commit(ic, commit)?;
+        }
+        self.draw_preedit(server, ic, preedit)
     }
 
     pub fn set_keymap(&mut self, keymap: Keymap) {
@@ -122,16 +174,7 @@ fn sync_commit_request(ic: &InputContext, text: &str) -> Request {
     }
 }
 
-/// 조합 중 글자를 비우고 `commit`을 확정한 뒤 새 조합 중 글자를 그린다.
-fn show<S: Server>(server: &mut S, ic: &mut InputContext, commit: &str, preedit: &str) -> Result<(), ServerError> {
-    if !commit.is_empty() {
-        server.preedit_draw(ic, "")?;
-        server.commit(ic, commit)?;
-    }
-    server.preedit_draw(ic, preedit)
-}
-
-impl<S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handler {
+impl<C: Connection, S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handler<'_, C> {
     type InputStyleArray = [InputStyle; 4];
     type InputContextData = Composer;
 
@@ -164,10 +207,14 @@ impl<S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handle
         server.set_event_mask(&user_ic.ic, KEY_PRESS_MASK, 0)
     }
 
-    fn handle_destroy_ic(&mut self, _server: &mut S, user_ic: UserInputContext<Composer>) -> Result<(), ServerError> {
+    fn handle_destroy_ic(
+        &mut self,
+        server: &mut S,
+        mut user_ic: UserInputContext<Composer>,
+    ) -> Result<(), ServerError> {
         let address = self.address(&user_ic.ic);
         self.held.remove(&address);
-        Ok(())
+        self.draw_preedit(server, &mut user_ic.ic, "")
     }
 
     fn handle_reset_ic(
@@ -175,7 +222,7 @@ impl<S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handle
         server: &mut S,
         user_ic: &mut UserInputContext<Composer>,
     ) -> Result<String, ServerError> {
-        server.preedit_draw(&mut user_ic.ic, "")?;
+        self.draw_preedit(server, &mut user_ic.ic, "")?;
         Ok(user_ic.user_data.flush())
     }
 
@@ -195,7 +242,7 @@ impl<S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handle
         let address = self.address(&user_ic.ic);
         self.release(server, address)?;
         let commit = user_ic.user_data.flush();
-        show(server, &mut user_ic.ic, &commit, "")
+        self.show(server, &mut user_ic.ic, &commit, "")
     }
 
     fn handle_set_ic_values(
@@ -226,7 +273,7 @@ impl<S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handle
         let after = user_ic.user_data.preedit();
 
         if !outcome.consumed && !outcome.commit.is_empty() {
-            server.preedit_draw(&mut user_ic.ic, "")?;
+            self.draw_preedit(server, &mut user_ic.ic, "")?;
             server.send_req(
                 user_ic.ic.client_win(),
                 sync_commit_request(&user_ic.ic, &outcome.commit),
@@ -239,7 +286,7 @@ impl<S: Server<XEvent = KeyPressEvent> + ServerCore> ServerHandler<S> for Handle
             return Ok(true);
         }
         if !outcome.commit.is_empty() || before != after {
-            show(server, &mut user_ic.ic, &outcome.commit, &after)?;
+            self.show(server, &mut user_ic.ic, &outcome.commit, &after)?;
         }
         Ok(outcome.consumed)
     }
