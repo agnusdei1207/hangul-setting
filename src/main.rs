@@ -12,6 +12,7 @@ use hangul_setting::keymap::Keymap;
 use x11rb::connection::Connection;
 use x11rb::protocol::Event;
 use x11rb::protocol::xproto::ConnectionExt;
+use x11rb::rust_connection::RustConnection;
 use xim::x11rb::X11rbServer;
 use xim::{Request, XimConnections};
 
@@ -32,6 +33,41 @@ fn load_keymap(conn: &impl Connection) -> Result<Keymap, Box<dyn std::error::Err
     ))
 }
 
+/// X 서버에 붙는다. x11rb는 소켓 파일(`/tmp/.X11-unix/X0`)만 시도하므로, 실패하면 libxcb처럼 리눅스
+/// 추상 소켓(`@/tmp/.X11-unix/X0`)으로 다시 붙는다. WSLg처럼 소켓 폴더가 읽기 전용이면 X 서버가
+/// 추상 소켓만 연다.
+fn connect_x() -> Result<(RustConnection, usize), Box<dyn std::error::Error>> {
+    let error = match RustConnection::connect(None) {
+        Ok(connection) => return Ok(connection),
+        Err(error) => error,
+    };
+    #[cfg(target_os = "linux")]
+    if let Some(connection) = connect_abstract_socket() {
+        return Ok(connection);
+    }
+    Err(error.into())
+}
+
+#[cfg(target_os = "linux")]
+fn connect_abstract_socket() -> Option<(RustConnection, usize)> {
+    use std::os::linux::net::SocketAddrExt;
+    use std::os::unix::net::{SocketAddr, UnixStream};
+    use x11rb::reexports::x11rb_protocol::{parse_display, xauth};
+    use x11rb::rust_connection::DefaultStream;
+
+    let display = parse_display::parse_display(None).ok().filter(|d| d.host.is_empty())?;
+    let address = SocketAddr::from_abstract_name(format!("/tmp/.X11-unix/X{}", display.display)).ok()?;
+    let (stream, (family, peer)) = DefaultStream::from_unix_stream(UnixStream::connect_addr(&address).ok()?).ok()?;
+    let (auth_name, auth_data) = xauth::get_auth(family, &peer, display.display)
+        .ok()
+        .flatten()
+        .unwrap_or_default();
+    let screen = usize::from(display.screen);
+    let connection = RustConnection::connect_to_stream_with_auth_info(stream, screen, auth_name, auth_data).ok()?;
+    log::info!("X 서버 추상 소켓으로 연결: @/tmp/.X11-unix/X{}", display.display);
+    Some((connection, screen))
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if std::env::args().any(|a| a == "--version" || a == "-V") {
         println!("hangul-setting {}", env!("CARGO_PKG_VERSION"));
@@ -39,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
-    let (conn, screen_num) = x11rb::rust_connection::RustConnection::connect(None)?;
+    let (conn, screen_num) = connect_x()?;
     let mut server = X11rbServer::init(&conn, screen_num, IM_NAME, xim::ALL_LOCALES)?;
     let mut connections = XimConnections::new();
     let config = config::load().unwrap_or_else(|e| {

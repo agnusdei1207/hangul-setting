@@ -33,7 +33,8 @@ Wayland 네이티브 앱, 세벌식·한자 변환, 설정 GUI, GTK4 앱 간 한
 | 의존성 | 0.3.0 deb `Depends: fonts-nanum, libc6 (>= 2.34)`. deb 설치 E2E에서 `통과 폰트: NanumSquare…`와 다섯 검사 통과 | 통과 |
 | 소개 페이지 | 로컬: HTML 태그 짝·JSON-LD 검사, 헤드리스 Chromium 데스크톱·모바일 캡처, `publish.sh` 세 모드 검증. 공개: `site.yml` 게시 성공, 페이지 제목·캐노니컬·JSON-LD 응답, `robots.txt`·`sitemap.xml`·`install.sh`·공개키 200 | 통과 |
 | 공개 배포 | `v0.3.0` 릴리스 워크플로(deb 설치 E2E 포함) 통과. 깨끗한 Kali 컨테이너에서 공개 `install.sh`로 0.3.0 설치 후 다섯 검사 통과 | 통과 |
+| 실제 Kali(WSL) 설치 | 이 PC의 WSL `kali-linux`(Kali rolling)에 공개 `install.sh`로 설치. 처음엔 입력기가 X에 못 붙었다: WSLg가 `/tmp/.X11-unix`를 읽기 전용으로 붙여 X 서버가 리눅스 추상 소켓만 열고, x11rb 0.14는 추상 소켓을 지원하지 않는다. libxcb처럼 추상 소켓으로 다시 붙게 고친 0.3.1 바이너리로 xterm 조합 창·xterm·GTK3·Qt6·GTK4 통과(종료 코드 0) | 통과 |
 
 남은 것: 없음. 검색 노출을 원하면 Google Search Console에 사이트를 등록하고 `sitemap.xml`을 제출한다(사용자 계정 작업).
 
-남는 위험: gtk4-rs 0.11의 `get_preedit_string` 연결 함수가 NULL 출력 인자를 확인하지 않아(앱이 죽음) 그 vfunc를 우리 함수로 바꿔 끼웠다. gtk4-rs를 올릴 때 다시 확인한다. 조합 창은 화면이 32비트 픽셀일 때만 그린다(일반 데스크톱은 해당).
+남는 위험: WSLg처럼 Wayland 화면이 있으면 GTK·Qt 앱이 Wayland로 떠서 입력이 안 된다(README 문제 해결에 X11로 띄우는 법). gtk4-rs 0.11의 `get_preedit_string` 연결 함수가 NULL 출력 인자를 확인하지 않아(앱이 죽음) 그 vfunc를 우리 함수로 바꿔 끼웠다. gtk4-rs를 올릴 때 다시 확인한다. 조합 창은 화면이 32비트 픽셀일 때만 그린다(일반 데스크톱은 해당).

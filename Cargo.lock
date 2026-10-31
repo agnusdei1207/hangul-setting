@@ -574,7 +574,7 @@ dependencies = [
 
 [[package]]
 name = "hangul-gtk4-im"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "gtk4",
  "hangul-setting",
@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "hangul-setting"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "env_logger",
  "fontdue",

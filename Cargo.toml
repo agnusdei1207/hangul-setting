@@ -1,6 +1,6 @@
 [package]
 name = "hangul-setting"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 description = "Kali Linux용 Rust 한글 입력기 (두벌식, GTK3·GTK4·Qt6·XIM)"
 license = "MIT"

@@ -8,6 +8,9 @@ set -eu
 
 here=$(dirname "$0")
 out=$(mktemp -d)
+# X11 세션을 검증한다. Wayland 화면이 있는 곳(WSLg 등)에서 앱이 그쪽에 뜨지 않게 한다.
+unset WAYLAND_DISPLAY
+export GDK_BACKEND=x11 QT_QPA_PLATFORM=xcb
 export DISPLAY=:99 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 export XMODIFIERS="${XMODIFIERS:-@im=hangul}" GTK_IM_MODULE="${GTK_IM_MODULE:-hangul-setting:xim}"
 export QT_IM_MODULE="${QT_IM_MODULE:-ibus}" IBUS_USE_PORTAL="${IBUS_USE_PORTAL:-1}"

@@ -1,6 +1,6 @@
 [package]
 name = "hangul-gtk4-im"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 description = "hangul-setting GTK4 입력 모듈"
 license = "MIT"
