@@ -1,0 +1,33 @@
+# 로컬 검증. 리눅스 GTK4 개발 라이브러리 없이도 어디서나 같은 결과를 낸다.
+#   docker compose up --abort-on-container-exit --exit-code-from e2e   빌드 → deb → Kali에 설치해 실제 입력 검사
+#   docker compose run --rm public                                     공개 APT 저장소에서 설치해 실제 입력 검사
+services:
+  build:
+    image: rust:1.99-trixie
+    working_dir: /src
+    environment:
+      CARGO_TARGET_DIR: /src/target/linux
+      CI: "1"
+    volumes:
+      - .:/src
+      - cargo-registry:/usr/local/cargo/registry
+    command: sh tests/build.sh
+
+  e2e:
+    build: tests/e2e
+    depends_on:
+      build:
+        condition: service_completed_successfully
+    volumes:
+      - .:/src
+    command: sh -c 'sh /src/tests/e2e/run.sh /src/target/linux/debian/hangul-setting_*.deb'
+
+  public:
+    build: tests/e2e
+    profiles: [public]
+    volumes:
+      - .:/src
+    command: sh /src/tests/e2e/public.sh
+
+volumes:
+  cargo-registry:

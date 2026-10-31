@@ -102,6 +102,14 @@ toggle = Ctrl+space, Hangul
 
 ## 개발
 
+Docker만 있으면 된다(윈도우·맥 포함).
+
+```sh
+docker compose up --build --abort-on-container-exit --exit-code-from e2e   # 테스트 → 빌드 → deb → Kali 컨테이너에 설치해 실제 입력 검사
+docker compose run --rm public                                             # 공개 저장소에서 apt로 설치해 실제 입력 검사
+```
+
+
 | 문서 | 내용 |
 |---|---|
 | [AGENTS.md](AGENTS.md) | 게이트(포맷·린트·테스트), 실제 화면 E2E, 릴리스 방법 |

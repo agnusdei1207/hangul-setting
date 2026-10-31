@@ -19,6 +19,7 @@
 | `gtk4-im/` | GTK4 입력 모듈(cdylib). 앱 안에서 엔진을 돌리고 처리하지 않는 키는 GTK 기본 입력기로 넘긴다 | `libim-hangul-setting.so`, `GTK_IM_MODULE=hangul-setting` | 0003 |
 | `packaging/` | deb의 세션 환경 변수·자동 시작·설치 후 안내, APT 저장소·사이트 게시 스크립트와 공개키 | `[package.metadata.deb]`, `apt/publish.sh`, `apt/install.sh` | 0001, 0003 |
 | `site/` | 소개 페이지와 검색 엔진용 파일 | `index.html`, `robots.txt`, `sitemap.xml` | 0003 |
+| `compose.yaml`, `tests/build.sh` | 로컬 검증 한 번에: 컨테이너에서 게이트·빌드·deb → Kali 컨테이너 E2E, 공개 저장소 설치 E2E(`public`) | `docker compose up`, `docker compose run --rm public` | 0003 |
 | `tests/e2e/` | Kali 컨테이너의 Xvfb·세션 D-Bus 위 xterm(조합 창 포함)·GTK3·Qt6·GTK4에 실제로 타이핑하는 검증 | `run.sh <.deb>` 또는 `run.sh <바이너리> <GTK4 모듈>` | 0001–0003 |
 
 의존 방향: `main` → `xim_handler`·`ibus`·`preedit_window` → `engine`·`config` → `hangul`. `gtk4-im` → `engine`·`config` → `hangul`. `hangul`·`engine`·`config`·`keymap`은 X·D-Bus·GTK 없이 테스트한다.

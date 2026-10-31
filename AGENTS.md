@@ -1,5 +1,14 @@
 # 운영 계약
 
+## 한 번에 검증 (Docker Compose, 권장)
+
+```sh
+docker compose up --build --abort-on-container-exit --exit-code-from e2e   # 게이트 → 빌드 → deb → Kali에 설치해 실제 입력 검사
+docker compose run --rm public                                             # 공개 APT 저장소에서 설치해 실제 입력 검사
+```
+
+`build`(rust:1.99-trixie + GTK4 개발 라이브러리)가 `tests/build.sh`로 포맷·린트·테스트·빌드·deb을 하고, `e2e`(Kali)가 그 deb을 설치해 xterm 조합 창·xterm·GTK3·Qt6·GTK4에 실제로 타이핑한다. 로컬 검증은 WSL이 아니라 이 컨테이너로 한다.
+
 ## 게이트
 
 윈도우·맥 등 GTK4 개발 라이브러리가 없는 곳(기본 멤버만):
